@@ -1,0 +1,70 @@
+plugins {
+	id 'java'
+	id("org.springframework.boot") version "3.5.3"
+	id("io.spring.dependency-management") version "1.1.7"
+	id("com.diffplug.spotless") version "7.1.0"
+}
+
+java {
+	toolchain {
+		languageVersion = JavaLanguageVersion.of(17)
+	}
+}
+
+repositories {
+	mavenCentral()
+}
+
+dependencies {
+	def springBootVersion = "3.5.3"
+	implementation("org.springframework.boot:spring-boot-starter:$springBootVersion")
+	implementation("org.springframework.boot:spring-boot-starter-web:$springBootVersion")
+	implementation("org.springframework.boot:spring-boot-starter-validation:$springBootVersion")
+	implementation("org.springframework.boot:spring-boot-starter-data-jpa:$springBootVersion")
+	implementation('org.postgresql:postgresql:42.7.7')
+
+	def lombokVersion = "1.18.38"
+	compileOnly("org.projectlombok:lombok:$lombokVersion")
+	annotationProcessor("org.projectlombok:lombok:$lombokVersion")
+
+	testImplementation("org.springframework.boot:spring-boot-starter-test:$springBootVersion")
+
+	def testContainerVersion = "1.21.2"
+	testImplementation("org.testcontainers:junit-jupiter:$testContainerVersion")
+	testImplementation("org.testcontainers:postgresql:$testContainerVersion")
+
+	implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.9'
+}
+
+test {
+	useJUnitPlatform()
+}
+
+// FORMAT CODE
+spotless {
+	format('misc') {
+		target('*.gradle', '.gitattributes', '.gitignore')
+		trimTrailingWhitespace()
+		leadingSpacesToTabs()
+		endWithNewline()
+	}
+
+	java {
+		importOrder()
+		removeUnusedImports()
+		googleJavaFormat()
+		formatAnnotations()
+	}
+}
+
+afterEvaluate {
+	def spotless = project.tasks.named('spotlessApply')
+	if (spotless != null) {
+		project.tasks.withType(JavaCompile).configureEach {
+			finalizedBy spotless
+		}
+		project.tasks.withType(GroovyCompile).configureEach {
+			finalizedBy spotless
+		}
+	}
+}
